@@ -7,7 +7,7 @@ Custom Waybar modules that show CPU and memory usage with rich tooltips.
 **Bar:**
 
 ```
-2.1%   8.0G
+2.1%   8.0G
 ```
 
 **CPU tooltip:**
@@ -38,7 +38,7 @@ MEMORY
 141.4M  udev-worker
 108.7M  marksman
 
-Swap: 2.0G / 34.6G
+Swap: 2.0G / 34.6G
 ```
 
 The usage bar is colored green for the filled portion. Titles, values, and icons are colored per module configuration. Docker containers are highlighted with `[D]`.
