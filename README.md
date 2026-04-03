@@ -1,22 +1,47 @@
 # waybar-top-cpu-mem
 
-Custom Waybar modules that show CPU and memory usage with rich tooltips. Pure bash, no dependencies beyond standard Linux tools.
+Custom Waybar modules that show CPU and memory usage with rich tooltips.
 
-## Preview
+## Example
 
-**Bar:** Shows total CPU percentage and memory usage with configurable icons and colors.
+**Bar:**
 
-**Tooltip (CPU):**
-- Usage bar with percentage
-- Top 10 processes by CPU, aggregated by name
-- Docker containers marked with `[D]`
-- Load average (1/5/15 min)
+```
+2.1%   8.0G
+```
 
-**Tooltip (Memory):**
-- Usage bar with percentage
-- Top 10 processes by RSS memory, aggregated by name
-- Docker containers marked with `[D]`
-- Swap usage
+**CPU tooltip:**
+
+```
+CPU
+━━━━━━━━━━━━━━━━━━━━ 2.1%
+  1.2%  claude
+  0.3%  brave
+  0.3%  kworker
+  0.3%  alacritty
+
+Load: 1.08  0.92  0.80
+```
+
+**Memory tooltip:**
+
+```
+MEMORY
+━━━━━━━━━━━━━━━━━━━━ 26.2%
+  4.5G  brave
+943.1M  slack
+558.6M  claude
+481.1M  zed-editor
+400.4M  claude [D]
+205.4M  walker
+164.8M  swayosd-server
+141.4M  udev-worker
+108.7M  marksman
+
+Swap: 2.0G / 34.6G
+```
+
+The usage bar is colored green for the filled portion. Titles, values, and icons are colored per module configuration. Docker containers are highlighted with `[D]`.
 
 ## How it works
 
@@ -48,7 +73,7 @@ Clone the repo wherever you like:
 git clone https://github.com/twiking/waybar-top-cpu-mem.git ~/Dev/waybar-top-cpu-mem
 ```
 
-Add the modules to your `~/.config/waybar/config.jsonc`, pointing `exec` at the repo:
+Add the modules to your `~/.config/waybar/config.jsonc`:
 
 ```jsonc
 "modules-right": [
@@ -58,38 +83,23 @@ Add the modules to your `~/.config/waybar/config.jsonc`, pointing `exec` at the 
 ],
 
 "custom/top-cpu": {
-  "exec": "~/Dev/waybar-top-cpu-mem/top-cpu.sh",
+  "exec": "/path/to//waybar-top-cpu-mem/top-cpu.sh",
   "return-type": "json",
   "interval": 3,
   "format": "{}",
   "tooltip": true,
-  "icon": "",       // Nerd Font icon (optional)
-  "color": "#ffb86c", // Bar text color
+  "icon": "",
+  "color": "#ffb86c",
 },
 "custom/top-memory": {
-  "exec": "~/Dev/waybar-top-cpu-mem/top-memory.sh",
+  "exec": "/path/to//waybar-top-cpu-mem/top-memory.sh",
   "return-type": "json",
   "interval": 3,
   "format": "{}",
   "tooltip": true,
-  "icon": "",
+  "icon": "",
   "color": "#8be9fd",
 },
 ```
 
 Restart Waybar to apply.
-
-## Configuration
-
-Each module reads `icon` and `color` from its own section in `config.jsonc`:
-
-| Key | Description | Default |
-|-----|-------------|---------|
-| `icon` | Nerd Font icon shown after the value | (none) |
-| `color` | Pango color for the bar text | `#ffb86c` (cpu) / `#8be9fd` (memory) |
-
-## Requirements
-
-- Waybar
-- bash, awk, top, ps, free (standard on any Linux system)
-- A Nerd Font (for icons)
