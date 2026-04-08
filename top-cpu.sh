@@ -12,9 +12,14 @@ total_cpu=$(top -b -n1 -w 256 | awk -v n="$ncpu" 'NR>7 {sum+=$9} END {printf "%.
 
 # Aggregate CPU by process name, resolving generic names (MainThread, .wrap) to real commands
 top_procs=$({
-  ps -eo pid=,comm=,args= --no-headers | awk -v dpids=" ${docker_pids} " '{
+  ps -eo pid=,comm=,args= --no-headers | awk -v dmap="${docker_pid_container}" 'BEGIN {
+    n=split(dmap, entries, " ")
+    for (i=1; i<=n; i++) {
+      eq=index(entries[i], "=")
+      if (eq > 0) ctr[substr(entries[i], 1, eq-1)]=substr(entries[i], eq+1)
+    }
+  } {
     pid=$1; comm=$2
-    docker=(index(dpids, " " pid " ") > 0)
     if (comm == "MainThread" || comm ~ /^\..*-wrap(ped)?$/) {
       name=""
       for (i=3; i<=NF; i++) {
@@ -26,7 +31,7 @@ top_procs=$({
     } else {
       name=comm
     }
-    if (docker) name=name " [D]"
+    if (ctr[pid] != "") name=name " [D:" ctr[pid] "]"
     print "PS", pid, name
   }'
   top -b -n1 -o %CPU -w 256 | awk 'NR>7 && $9+0>0 {print "TOP", $1, $9}'
@@ -42,7 +47,6 @@ tooltip="<b><span color='${cpu_color}'>CPU</span></b>\\n${cpu_bar}"
 while IFS= read -r line; do
   cpu=$(echo "$line" | awk '{printf "%5.1f", $1}')
   name=$(echo "$line" | awk '{$1=""; sub(/^ /,""); print}')
-  name="${name:0:18}"
   tooltip+="\\n$(format_proc_line "${cpu}%" "$name")"
 done <<< "$top_procs"
 

@@ -36,18 +36,40 @@ make_bar() {
   echo "$bar"
 }
 
-# Collect PIDs running inside docker containers
-docker_pids=$(cat /sys/fs/cgroup/system.slice/docker-*/cgroup.procs 2>/dev/null | tr '\n' ' ')
+# Collect PIDs running inside docker containers, mapped to container names
+docker_pid_container=""
 docker_color="#50a0e0"
 
-# Format a process line for tooltip with docker highlighting
-# Usage: format_proc_line <value> <name> <suffix>
+if command -v docker &>/dev/null; then
+  declare -A _cid_name=()
+  while read -r cid cname; do
+    [[ -n "$cid" ]] && _cid_name[$cid]=$cname
+  done < <(docker ps --no-trunc --format '{{.ID}} {{.Names}}' 2>/dev/null)
+
+  for _cgdir in /sys/fs/cgroup/system.slice/docker-*.scope; do
+    [[ -f "$_cgdir/cgroup.procs" ]] || continue
+    _cid=$(basename "$_cgdir")
+    _cid=${_cid#docker-}
+    _cid=${_cid%.scope}
+    _cname=${_cid_name[$_cid]:-}
+    [[ -z "$_cname" ]] && continue
+    while read -r _pid; do
+      [[ -n "$_pid" ]] && docker_pid_container+="${_pid}=${_cname} "
+    done < "$_cgdir/cgroup.procs"
+  done
+  unset _cid_name _cgdir _cid _cname _pid
+fi
+
+# Format a process line for tooltip with docker container name
+# Usage: format_proc_line <value> <name>
 format_proc_line() {
   local val=$1 name=$2
-  if [[ "$name" == *"[D]"* ]]; then
-    name="${name% \[D\]}"
+  if [[ "$name" =~ \[D:([^]]+)\]$ ]]; then
+    local container="${BASH_REMATCH[1]}"
+    name="${name% \[D:*}"
     name="${name:0:14}"
-    echo "${val}  ${name} <span color='${docker_color}'>[D]</span>"
+    local pad=$(printf '%*s' $((${#val} + 2)) '')
+    echo "${val}  ${name} <span color='${docker_color}'>[D]</span>\\n${pad}<span color='${docker_color}'>└ ${container}</span>"
   else
     name="${name:0:14}"
     echo "${val}  ${name}"

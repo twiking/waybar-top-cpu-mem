@@ -9,9 +9,14 @@ total_mem=$(free -k | awk '/^Mem:/ {printf "%.1f", $3/1048576}')
 mem_pct=$(free -k | awk '/^Mem:/ {printf "%.1f", $3/$2*100}')
 
 # Aggregate memory (RSS in KB) by resolved process name, show top 10
-top_mem=$(ps -eo pid=,comm=,rss=,args= --no-headers | awk -v dpids=" ${docker_pids} " '{
+top_mem=$(ps -eo pid=,comm=,rss=,args= --no-headers | awk -v dmap="${docker_pid_container}" 'BEGIN {
+  n=split(dmap, entries, " ")
+  for (i=1; i<=n; i++) {
+    eq=index(entries[i], "=")
+    if (eq > 0) ctr[substr(entries[i], 1, eq-1)]=substr(entries[i], eq+1)
+  }
+} {
   pid=$1; comm=$2; rss=$3
-  docker=(index(dpids, " " pid " ") > 0)
   if (comm == "MainThread" || comm ~ /^\..*-wrap(ped)?$/) {
     name=""
     for (i=4; i<=NF; i++) {
@@ -23,7 +28,7 @@ top_mem=$(ps -eo pid=,comm=,rss=,args= --no-headers | awk -v dpids=" ${docker_pi
   } else {
     name=comm
   }
-  if (docker) name=name " [D]"
+  if (ctr[pid] != "") name=name " [D:" ctr[pid] "]"
   mem[name]+=rss
 } END {for (name in mem) if (mem[name]>0) printf "%d %s\n", mem[name], name}' | sort -rn | head -10 | awk '{val=$1/1024; unit="M"; if(val>=1000){val/=1024; unit="G"} $1=""; sub(/^ /,""); printf "%5.1f%s  %s\n", val, unit, $0}')
 
