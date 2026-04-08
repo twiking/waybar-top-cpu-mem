@@ -2,46 +2,21 @@
 
 Custom Waybar modules that show CPU and memory usage with rich tooltips.
 
-## Example
+- **Per-process breakdown** - see which processes are actually eating your CPU and memory, right in the bar tooltip
+- **Docker-aware** - detects containerized processes and shows the container name
+- **Smart process names** - resolves unhelpful names like `MainThread`, Nix wrappers, and generic interpreters to the real application
 
-**Bar:**
+## Screenshots
 
-```
-2.1%   8.0G
-```
+### CPU
 
-**CPU tooltip:**
+![CPU tooltip](screenshots/cpu.png)
 
-```
-CPU
-━━━━━━━━━━━━━━━━━━━━ 2.1%
-  1.2%  claude
-  0.3%  brave
-  0.3%  kworker
-  0.3%  alacritty
+### Memory
 
-Load: 1.08  0.92  0.80
-```
+![Memory tooltip](screenshots/mem.png)
 
-**Memory tooltip:**
-
-```
-MEMORY
-━━━━━━━━━━━━━━━━━━━━ 26.2%
-  4.5G  brave
-943.1M  slack
-558.6M  claude
-481.1M  zed-editor
-400.4M  claude [D]
-205.4M  walker
-164.8M  swayosd-server
-141.4M  udev-worker
-108.7M  marksman
-
-Swap: 2.0G / 34.6G
-```
-
-The usage bar is colored green for the filled portion. Titles, values, and icons are colored per module configuration. Docker containers are highlighted with `[D]`.
+The usage bar is colored green for the filled portion. Titles, values, and icons are colored per module configuration. Docker containers are highlighted with `[D]` and show the container name below the process.
 
 ## How it works
 
@@ -51,7 +26,7 @@ CPU usage is normalized across all cores to a 0-100% scale (matching tools like 
 
 ### Memory
 
-Memory is aggregated per process name using RSS from `ps`. Multiple instances of the same process (e.g. browser tabs) are summed together. Values automatically scale between MB and GB.
+Memory is aggregated per process name using RSS from `ps`. Multiple instances of the same process (e.g. browser tabs) are summed together.
 
 ### Process name resolution
 
@@ -63,7 +38,7 @@ Both modules handle cases where the reported process name is unhelpful:
 
 ### Docker detection
 
-Processes running inside Docker containers are detected via cgroup membership and tagged with `[D]` in the tooltip.
+Processes running inside Docker containers are detected via cgroup membership and tagged with `[D]` in the tooltip. The container name is shown below the process.
 
 ## Installation
 
